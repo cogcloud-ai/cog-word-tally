@@ -1,0 +1,34 @@
+schema: openteams/cog-manifest [0.1]
+id: openteams/cog-word-tally
+version: 0.1.0
+summary: 'Tally word frequencies across supplied texts, accumulating prior counts.
+
+  '
+license: Apache-2.0
+kind: code
+owner: trent@openteams.com
+frames: []
+requires: []
+reaches: []
+context:
+  input_schema: context/input-schema.json
+  output_schema: context/output-schema.json
+interfaces:
+- name: cli
+  kind: command
+  task: run
+  audience: usage
+  default: true
+- name: check
+  kind: command
+  task: check
+  audience: lifecycle
+io:
+  accepts:
+  - task_request
+  produces:
+  - word_tally
+memory: none
+prohibits:
+- execute_actions
+- send_external_message

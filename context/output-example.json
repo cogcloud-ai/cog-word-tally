@@ -1,0 +1,5 @@
+{
+  "counts": {"cat": 5, "Cat": 4, "dog": 1, "": 2, "unused": 0},
+  "total_words": 12,
+  "authority_use": []
+}

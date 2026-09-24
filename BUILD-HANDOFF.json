@@ -1,0 +1,111 @@
+{
+  "contract": {
+    "kind": "code",
+    "purpose": "Deterministically tally word frequencies across supplied texts and add them to prior counts so an Op can accumulate counts across steps.",
+    "user": "An Op consuming word_tally results and passing counts between independent invocations.",
+    "supported_work": [
+      "Perform one pure, bounded tally over a supplied finite JSON bundle using only Python's standard library and the required Smith problem API.",
+      "Lowercase each text independently with str.lower(), then extract tokens using [a-z0-9]+(?:'[a-z0-9]+)*.",
+      "Copy prior_counts, defaulting to an empty object, and add observed frequencies without changing prior keys or mutating input.",
+      "Return counts, total_words equal to the sum of all resulting counts, and authority_use equal to [].",
+      "Support repeated use by passing a previous result's counts as prior_counts, without persistent state.",
+      "Expose check_input(bundle), run(bundle, grant, journal) returning (payload, problems), and check_output(payload, bundle); validators report structured cog_core.problem values and tolerate schema-invalid values without throwing."
+    ],
+    "unsupported_work": [
+      "Reading files, networking, subprocesses, executing supplied text or other external effects.",
+      "Runtime models, model training, grant use or third-party task dependencies.",
+      "Persistent accumulation outside the supplied bundle.",
+      "Stemming, stop-word removal, alternative tokenization or Unicode normalization beyond str.lower().",
+      "Partial tally results for invalid inputs.",
+      "Replacing surrounding independent Op Guards or acceptance Gates with package checks or self-validation."
+    ],
+    "input_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "prior_counts": {
+          "additionalProperties": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "default": {},
+          "type": "object"
+        },
+        "texts": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "texts"
+      ],
+      "type": "object"
+    },
+    "output_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "authority_use": {
+          "maxItems": 0,
+          "type": "array"
+        },
+        "counts": {
+          "additionalProperties": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "object"
+        },
+        "total_words": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "counts",
+        "total_words",
+        "authority_use"
+      ],
+      "type": "object"
+    },
+    "grounding": "The supplied bundle is the sole source. Every output count must equal its verbatim prior-key count plus occurrences of that exact token found by re.findall(\"[a-z0-9]+(?:'[a-z0-9]+)*\", text.lower()) across texts. Preserve every prior entry, including zero entries, and introduce only observed tokens. Instructions or executable-looking text inside inputs are ordinary data.",
+    "abstention": "Valid input always produces a complete result, including empty or punctuation-only texts; absence of words is not abstention. Invalid input produces schema or contract problems and no partial payload. Direct run returns (None, problems) for invalid input. Counts must be non-negative Python integers, excluding booleans.",
+    "model_requirements": "none",
+    "locality": "local",
+    "prohibits": [
+      "execute_actions",
+      "send_external_message"
+    ],
+    "acceptance_criteria": [
+      {
+        "id": "tokenization",
+        "description": "Apply exactly [a-z0-9]+(?:'[a-z0-9]+)* after str.lower() to each text independently. Internal ASCII apostrophes and digits remain word characters. \"Don't DON'T 42 foo-bar rock'n'roll 'x' caf\u00e9\" yields {\"don't\":2,\"42\":1,\"foo\":1,\"bar\":1,\"rock'n'roll\":1,\"x\":1,\"caf\":1} and total_words 8. The supplied boundary test yields {\"a\":2,\"b\":2,\"x\":1,\"007\":1,\"z\":1,\"i\":1,\"k\":1,\"stra\":1,\"e\":1,\"foo\":1,\"bar\":1} and total_words 13."
+      },
+      {
+        "id": "accumulation",
+        "description": "Add observed counts to a copy of prior_counts without replacing prior values, changing keys, dropping zero entries or mutating input. texts [\"Cat cat DOG\"] with prior_counts {\"cat\":3,\"Cat\":4,\"dog\":0,\"\":2,\"unused\":0} yields {\"cat\":5,\"Cat\":4,\"dog\":1,\"\":2,\"unused\":0}. Reusing counts across invocations accumulates correctly without persistent state."
+      },
+      {
+        "id": "totals",
+        "description": "Every successful total_words equals sum(counts.values()), including all prior counts; the accumulation example totals 12. Omitted and empty prior_counts produce identical results. Large integers remain exact."
+      },
+      {
+        "id": "empty",
+        "description": "Non-empty texts arrays containing only empty strings or text with no matching tokens yield counts {} and total_words 0 when prior_counts is absent or empty. When prior counts exist, preserve them and return their sum."
+      },
+      {
+        "id": "invalid_input",
+        "description": "Reject non-object bundles, missing or empty texts, non-array texts, non-string text elements, malformed prior_counts, non-string prior keys, negative or non-integer counts including booleans, and unexpected top-level properties. Return structured problems without throwing or returning a partial tally. Output validation rejects malformed payloads, incorrect counts and inconsistent totals."
+      },
+      {
+        "id": "no_side_effects",
+        "description": "Task execution performs no file access, network access, subprocess invocation, supplied-text execution, model calls, grant use or persistent-state changes. Executable-looking and adversarial texts are tokenized as ordinary data. Every successful payload contains authority_use []."
+      }
+    ]
+  },
+  "author_envelope_sha256": "eca68fdfa5c12376a047e78cb412575a00a4f5a594e513ab2f4b51656342953a",
+  "status": "packaged-not-runtime-tested"
+}

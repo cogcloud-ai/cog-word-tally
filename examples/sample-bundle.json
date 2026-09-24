@@ -1,0 +1,4 @@
+{
+  "texts": ["Cat cat DOG"],
+  "prior_counts": {"cat": 3, "Cat": 4, "dog": 0, "": 2, "unused": 0}
+}

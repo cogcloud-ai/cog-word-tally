@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "authority_use": {"maxItems": 0, "type": "array"},
+    "counts": {
+      "additionalProperties": {"minimum": 0, "type": "integer"},
+      "type": "object"
+    },
+    "total_words": {"minimum": 0, "type": "integer"}
+  },
+  "required": ["counts", "total_words", "authority_use"],
+  "type": "object"
+}
